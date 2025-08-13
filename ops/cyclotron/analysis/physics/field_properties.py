@@ -31,5 +31,5 @@ def calculate_sigma(flutter_squared: np.ndarray,
     dfdr = CubicSpline(R_vector, flutter_squared).derivative()
     return -1/(N**2 - 1)*(flutter_squared + R_vector/2 * dfdr(R_vector))
 
-def calculate_frequency(beam: BeamParameters, magnetic_field_unit: float) -> float:
-    return (beam.charge * magnetic_field_unit)/(6.5594262E2 * beam.mass)
+def calculate_frequency(beam: BeamParameters, magnetic_field: float) -> float:
+    return (beam.charge * magnetic_field)/(6.5594262E2 * beam.mass)
