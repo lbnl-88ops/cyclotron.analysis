@@ -5,8 +5,8 @@ from typing import List
 
 import numpy as np
 
-from cyclotron.analysis.physics.constants import ANGLE_OF_ZERO_INDEX_IN_DEGREES as _88AZI
-from cyclotron.analysis.model import FieldMetadata, MagneticField
+from ops.cyclotron.analysis.physics.constants import ANGLE_OF_ZERO_INDEX_IN_DEGREES as _88AZI
+from ops.cyclotron.analysis.model import FieldMetadata, MagneticField
 
 _log = getLogger(__name__)
 

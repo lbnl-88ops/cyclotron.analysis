@@ -4,7 +4,8 @@ from typing import Dict, List
 
 import numpy as np
 from scipy.interpolate import PchipInterpolator
-from cyclotron.analysis.model import TrimCoil
+
+from ops.cyclotron.analysis.model import TrimCoil
 
 _log = getLogger(__name__)
 
