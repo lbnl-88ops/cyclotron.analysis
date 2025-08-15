@@ -16,6 +16,28 @@ dependencies = [
     "scipy",
 ]
 
+# ----------------------------------------------------------------------
+# OPTIONAL DEPENDENCIES  (PEP 621)
+# ----------------------------------------------------------------------
+# `pip install .[docs]` will pull in everything you need to build the
+# Sphinx docs.  `pip install .[dev]` pulls in a superset that also
+# contains the test / linting stack.
+[project.optional-dependencies]
+docs = [
+    "sphinx >= 7.0",               
+    "sphinx-rtd-theme >= 2.0",     
+    "myst-parser >= 2.0",          
+    "sphinx-autodoc-typehints >= 2.0",  
+    "sphinx-copybutton >= 0.5",    
+]
+
+dev = [
+    "ops.cyclotron.analysis[docs]",   # pull in the docs stack
+    "pytest >= 8.0",
+    "pytest-cov >= 5.0",
+    "mypy >= 1.10",                  # static type checker
+]
+
 [tool.setuptools.packages.find]
 where = [""]          
 include = ["ops.cyclotron.analysis*"]
