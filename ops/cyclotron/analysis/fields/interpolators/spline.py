@@ -62,11 +62,53 @@ class SplineFieldInterpolator(FieldInterpolator):
         self._dbr_int = self._b_int.partial_derivative(0, 1)
 
     def b(self, r: float, theta: float) -> float:
+        """
+        Magnetic‑field magnitude **B** at the specified location.
+
+        The value is obtained from the internal interpolator ``_b_int`` which
+        expects arguments in the order ``(theta, r)``.
+
+        :param r: Radial coordinate measured from the centre of the device,
+                  **in inches**.
+        :type r: float
+        :param theta: Azimuthal angle measured from the reference direction,
+                      **in radians**.
+        :type theta: float
+        :return: Magnetic‑field magnitude :math:`B(r,\\theta)`.
+        :rtype: float
+        """
         return float(self._b_int(theta, r)[0][0])
 
     def dbdr(self, r: float, theta: float) -> float:
+        """
+        Radial derivative of the magnetic field, :math:`\\partial B/\\partial r`.
+
+        The derivative is evaluated by the internal routine ``_dbr_int`` (again
+        ordered as ``(theta, r)``).
+
+        :param r: Radial coordinate (**inches**).
+        :type r: float
+        :param theta: Azimuthal angle (**radians**).
+        :type theta: float
+        :return: Radial derivative of the magnetic field,
+                 :math:`\\frac{\\partial B}{\\partial r}(r,\\theta)`.
+        :rtype: float
+        """
         return float(self._dbr_int(theta, r)[0][0])
 
     def dbdt(self, r: float, theta: float) -> float:
-        return float(self._dbt_int(theta, r)[0][0])
+        """
+        Angular derivative of the magnetic field,
+        :math:`\\partial B/\\partial \\theta`.
 
+        The derivative is obtained from ``_dbt_int`` (ordered ``(theta, r)``).
+
+        :param r: Radial coordinate (**inches**).
+        :type r: float
+        :param theta: Azimuthal angle (**radians**).
+        :type theta: float
+        :return: Angular derivative of the magnetic field,
+                 :math:`\\frac{\\partial B}{\\partial \\theta}(r,\\theta)`.
+        :rtype: float
+        """
+        return float(self._dbt_int(theta, r)[0][0])

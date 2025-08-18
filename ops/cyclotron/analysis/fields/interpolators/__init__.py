@@ -1,1 +1,1 @@
-from .spline_field_interpolator import SplineFieldInterpolator
+from .spline import SplineFieldInterpolator
