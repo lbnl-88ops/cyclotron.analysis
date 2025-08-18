@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from logging import getLogger
-from typing import List, Tuple
+from typing import List
 from tqdm import tqdm
 
 import numpy as np
@@ -8,8 +8,9 @@ import scipy
 import scipy.integrate
 import matplotlib.pyplot as plt
 
-from ops.cyclotron.analysis.model import MagneticField
+from ops.cyclotron.analysis.model import MagneticField, BeamParameters
 from ops.cyclotron.analysis.fields.interpolators import FieldInterpolator
+from ops.cyclotron.analysis.physics import calculate_ion_mass_in_mev
 from .orbit_model import OrbitError, OrbitModel
 
 _log = getLogger(__name__)
@@ -47,24 +48,26 @@ class Rho:
 
 def calculate_equilibrium_orbits(magnetic_field: MagneticField, 
                                  magnetic_field_interpolator: FieldInterpolator,
+                                 beam: BeamParameters,
                                  *,
+                                 n_energy_steps = 100,
                                  plot: bool = False,
                                  maximum_radius: float = 68) -> List[Orbit]:
     orbit_model = OrbitModel(magnetic_field, magnetic_field_interpolator)
     cyclotron_length = magnetic_field_interpolator.l_0
+    final_gamma = 1 + beam.energy/calculate_ion_mass_in_mev(beam)
 
     rho_r = Rho()
     rho_pr = Rho()
     orbit_list = []
-    orbits = int(maximum_radius)
 
     if plot:
         plt.subplot(projection="polar")
     _log.info('Calculating orbits...')
-    for j in tqdm(range(orbits)):
-        _log.debug(f'Calculating orbit {j} of {orbits}')
-        beta = magnetic_field.metadata.delta_r/cyclotron_length*(j + 1)
-        gamma = 1/np.sqrt(1 - beta**2)
+    for j in tqdm(range(n_energy_steps)):
+        _log.debug(f'Calculating orbit {j + 1} of {n_energy_steps}')
+        gamma = 1 + (final_gamma - 1) * (j + 1)/n_energy_steps
+        beta = np.sqrt(1 - 1/(gamma**2))
         p = beta*gamma
         r_init = beta*(rho_r.value() + 1)
         pr_init = p*rho_pr.value()
@@ -72,7 +75,8 @@ def calculate_equilibrium_orbits(magnetic_field: MagneticField,
             _log.info('R-value outside of magnetic field, stopping.')
             break
         try:
-            orbit = orbit_model.solve_equilibrium_orbit_at_beta(beta, r_init, pr_init)
+            orbit = orbit_model.solve_orbit(beta=beta, gamma=gamma, 
+                                            r_init=r_init, pr_init=pr_init)
         except OrbitError as e:
             _log.debug(f'Orbit failed: {e}')
             continue

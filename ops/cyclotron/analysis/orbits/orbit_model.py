@@ -47,12 +47,19 @@ class OrbitModel:
 
     def dbr_int(self, theta, r):
         return self.interpolator.dbdr(r, theta)
-    
-    def solve_equilibrium_orbit_at_beta(self, beta: float, r_init: float, pr_init: float,
-                                        do_initial_solve = True) -> Orbit:
+
+    def solve_orbit_at_gamma(self, gamma: float, r_init: float, pr_init: float) -> Orbit:
+        beta = np.sqrt(1 - 1/(gamma**2))
+        return self._solve_orbit(beta, gamma, r_init, pr_init, True)
+
+    def solve_equilibrium_orbit_at_beta(self, beta: float, r_init: float, pr_init: float) -> Orbit:
+        gamma = 1/np.sqrt(1 - beta**2)
+        return self._solve_orbit(beta, gamma, r_init, pr_init, True)
+
+    def solve_orbit(self, beta: float, gamma: float, r_init: float, pr_init: float,
+                     do_initial_solve = True) -> Orbit:
         solved_orbit = Orbit()
         solve_steps = np.linspace(self.th[0], self.th[-1], self.n*len(self.th))
-        gamma = 1/np.sqrt(1 - beta**2)
         p = beta * gamma
         p2 = p**2
         r: float = 0
