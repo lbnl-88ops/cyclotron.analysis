@@ -36,7 +36,7 @@ class SplineFieldInterpolator(FieldInterpolator):
                  magnetic_field: MagneticField, 
                  cyclotron_length: float = 1.0,
                  magnetic_field_unit: float = 1.0) -> None:
-        super().__init__(magnetic_field)
+        super().__init__(magnetic_field, cyclotron_length, magnetic_field_unit)
         rs = np.array(magnetic_field.r_values)/cyclotron_length
         self.full_rs = np.concatenate([np.flip(-rs[1:]), rs])
         d_th = int(self.magnetic_field.metadata.delta_theta)

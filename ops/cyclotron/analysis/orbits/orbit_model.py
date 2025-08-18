@@ -4,8 +4,7 @@ from logging import getLogger
 import numpy as np
 from scipy.integrate import solve_ivp, OdeSolution
 
-from ops.cyclotron.analysis.fields.interpolators import (SplineFieldInterpolator,
-                                                         GaussianProcessFieldInterpolator)
+from ops.cyclotron.analysis.fields.interpolators import FieldInterpolator
 from ops.cyclotron.analysis.model import MagneticField
 
 _log = getLogger(__name__)
@@ -26,14 +25,10 @@ class Orbit:
     full_solution: OdeSolution
 
 class OrbitModel:
-    def __init__(self, 
-                 magnetic_field: MagneticField,
-                 magnetic_field_unit: float,
-                 cyclotron_length: float) -> None:
+    def __init__(self, magnetic_field: MagneticField,
+                 magnetic_field_interpolator: FieldInterpolator) -> None:
         self.magnetic_field = magnetic_field
-        self.b_0 = magnetic_field_unit
-        self.l_0 = cyclotron_length
-        self.rs = np.array(magnetic_field.r_values)/self.l_0
+        self.rs = np.array(magnetic_field.r_values)/magnetic_field_interpolator.l_0
 
         self.th = np.array(magnetic_field.theta_values 
                 + [magnetic_field.theta_values[-1] 
@@ -42,11 +37,7 @@ class OrbitModel:
         self.include_z_solve = False
         self.n = 2
         self.tolerance = 1E-10
-        # self.interpolator = GaussianProcessFieldInterpolator(magnetic_field, cyclotron_length,
-                                                            #  magnetic_field_unit)
-        self.interpolator = SplineFieldInterpolator(magnetic_field,
-                                                    cyclotron_length,
-                                                    magnetic_field_unit)
+        self.interpolator = magnetic_field_interpolator
 
     def b_int(self, theta, r):
         return self.interpolator(r, theta)

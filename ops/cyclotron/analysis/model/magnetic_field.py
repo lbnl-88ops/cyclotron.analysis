@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 
@@ -31,7 +31,6 @@ class MagneticField:
         self._first_moment_squared = None
         self._square = None
         self._second_moment = None
-
 
     @property
     def r_values(self) -> List[float]:

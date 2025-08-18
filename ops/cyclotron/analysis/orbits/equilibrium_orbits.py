@@ -9,6 +9,7 @@ import scipy.integrate
 import matplotlib.pyplot as plt
 
 from ops.cyclotron.analysis.model import MagneticField
+from ops.cyclotron.analysis.fields.interpolators import FieldInterpolator
 from .orbit_model import OrbitError, OrbitModel
 
 _log = getLogger(__name__)
@@ -45,11 +46,12 @@ class Rho:
         return 3*self._rhos[0] - 3*self._rhos[1] + self._rhos[2]
 
 def calculate_equilibrium_orbits(magnetic_field: MagneticField, 
-                                 magnetic_field_unit: float,
-                                 cyclotron_length: float,
+                                 magnetic_field_interpolator: FieldInterpolator,
+                                 *,
                                  plot: bool = False,
                                  maximum_radius: float = 68) -> List[Orbit]:
-    orbit_model = OrbitModel(magnetic_field, magnetic_field_unit, cyclotron_length)
+    orbit_model = OrbitModel(magnetic_field, magnetic_field_interpolator)
+    cyclotron_length = magnetic_field_interpolator.l_0
 
     rho_r = Rho()
     rho_pr = Rho()

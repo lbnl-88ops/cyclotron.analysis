@@ -11,7 +11,7 @@ _log = getLogger(__name__)
 
 class GaussianProcessFieldInterpolator(FieldInterpolator):
     def __init__(self, magnetic_field: MagneticField, l_0: float = 1.0, b_0: float = 1.0) -> None:
-        super().__init__(magnetic_field)
+        super().__init__(magnetic_field, l_0, b_0)
         dth = magnetic_field.metadata.delta_theta
 
         th_pad_i = int(magnetic_field.theta_values[0]/dth)
