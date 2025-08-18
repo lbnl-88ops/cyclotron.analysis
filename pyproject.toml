@@ -15,7 +15,8 @@ dependencies = [
     "matplotlib",
     "scipy",
     "scikit-learn",
-    "numdifftools"
+    "numdifftools",
+    "tqdm",
 ]
 
 # ----------------------------------------------------------------------
