@@ -1,1 +1,2 @@
 from .spline import SplineFieldInterpolator
+from .gaussian_process import GaussianProcessFieldInterpolator
