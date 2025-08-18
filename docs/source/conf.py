@@ -24,7 +24,10 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
     'sphinx.ext.linkcode',
-    'sphinx_rtd_theme'
+    'sphinx_rtd_theme',
+    'sphinx_autodoc_typehints',
+    'sphinx_copybutton',
+    'myst_parser'
 ]
 
 templates_path = ['_templates']
@@ -53,8 +56,8 @@ def linkcode_resolve(domain, info):
     filename = info['module'].replace('.', '/')
     github_base = 'https://github.com/lbnl-88ops/'
     repo = 'cyclotron.analysis'
-    branch = 'dev'
-    return '{base}{repo}/tree/{branch}/ops/cyclotron/analysis/{filename}.py'.format(
+    branch = 'main'
+    return '{base}{repo}/tree/{branch}/{filename}.py'.format(
         base=github_base, 
         repo=repo, 
         branch=branch, 
