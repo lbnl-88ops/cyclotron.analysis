@@ -1,1 +1,1 @@
-from .synchronous_field import converge_synchronous_field
+from .synchronous_field import converge_synchronous_field, synchronize_field

@@ -21,6 +21,112 @@ def _estimate_magnetic_field_unit(beam_parameters: BeamParameters,
     gamma = sqrt(1.0 + calculate_momentum_squared(beam_parameters))
     return magnetic_field/gamma
 
+def synchronize_field(iron_field: MagneticField, synchronous_field: np.ndarray) -> MagneticField:
+    """
+    Adjust a full iron magnetic field so that its **first moment** (radial
+    synchronous field) matches a supplied target field.
+
+    The *first moment* of a magnetic field :math:`B(\\theta, r)` is the radial
+    average obtained via :meth:`MagneticField.first_moment`.  This routine adds a
+    constant correction to every point of the iron field so that the corrected
+    field has exactly the same first‑moment values as ``synchronous_field`` while
+    preserving the original angular‑radial shape of ``iron_field``.
+
+    The operation is pure – the input ``iron_field`` is **not** mutated; a new
+    :class:`MagneticField` instance is returned.
+
+    Parameters
+    ----------
+    iron_field : MagneticField
+        The base (un‑corrected) magnetic field.  ``iron_field.values`` must be a
+        two‑dimensional ``np.ndarray`` of shape ``(N_θ, N_r)`` where the **first
+        index** corresponds to the azimuthal coordinate *θ* (in **radians**) and
+        the **second index** corresponds to the radial coordinate *r* (in
+        **inches**).  The object also provides the method
+        ``first_moment`` which returns the radial synchronous component
+        (a 1‑D array of length ``N_r``).
+
+    synchronous_field : numpy.ndarray
+        Desired first‑moment field.  This array should have the same shape as the
+        output of ``iron_field.first_moment(recalculate=True)`` – i.e. a
+        one‑dimensional array of length ``N_r`` containing the target radial
+        values (in the same magnetic‑field units as ``iron_field`` – for
+        example Tesla or Gauss).
+
+    Returns
+    -------
+    MagneticField
+        A new magnetic‑field object whose ``values`` are the original iron field
+        plus a constant offset that forces the first moment to equal
+        ``synchronous_field``.  The returned object re‑uses the metadata from
+        ``iron_field`` (grid definition, units, etc.).
+
+    Notes
+    -----
+    The correction is computed as
+
+    .. math::
+
+        \\Delta B = B_{\\text{sync}} - \\langle B_{\\text{iron}} \\rangle,
+
+    where ``\\langle B_{\\text{iron}} \\rangle`` denotes the first moment of the
+    iron field.  The same correction is added to **every** grid point:
+
+    .. math::
+
+        B_{\\text{new}}(\\theta, r) = B_{\\text{iron}}(\\theta, r) + \\Delta B(r).
+
+    In NumPy the broadcasting is performed with
+
+    .. code-block:: python
+
+        np.einsum('ij,j->ij', np.ones_like(b_0), correction)
+
+    because ``b_0`` has shape ``(N_θ, N_r)`` and ``correction`` is a
+    1‑D array of length ``N_r``.  The ``einsum`` call expands the correction
+    along the θ‑axis, which is equivalent to ``b_0 + correction[np.newaxis, :]``.
+
+    Examples
+    --------
+    >>> from ops.cyclotron.analysis import MagneticField, synchronize_field
+    >>> iron = MagneticField(metadata, values)          # shape (360, 100) → (θ, r)
+    >>> target = np.linspace(1.0, 2.0, 100)             # desired first moment (len = N_r)
+    >>> synced = synchronize_field(iron, target)
+    >>> np.allclose(synced.first_moment(), target)     # True
+    >>> # Original iron field is unchanged
+    >>> np.array_equal(iron.values, values)            # True
+
+    Raises
+    ------
+    TypeError
+        If ``synchronous_field`` is not a ``numpy.ndarray`` or if its shape does
+        not match the first‑moment shape of ``iron_field``.
+    """
+    b_0 = iron_field.values
+
+    # Current first moment (radial synchronous field).  ``recalculate=True``
+    # forces an up‑to‑date value in case the iron field has been mutated
+    # elsewhere.
+    current_moment = iron_field.first_moment(recalculate=True)
+
+    # Defensive checks
+    if not isinstance(synchronous_field, np.ndarray):
+        raise TypeError("synchronous_field must be a numpy.ndarray")
+    if synchronous_field.shape != current_moment.shape:
+        raise TypeError(
+            f"synchronous_field shape {synchronous_field.shape} does not match "
+            f"the iron field's first moment shape {current_moment.shape}"
+        )
+
+    # Compute the constant correction that will be added to every θ slice.
+    correction = synchronous_field - current_moment
+
+    # Broadcast the 1‑D correction over the θ (first) axis.
+    values = b_0 + np.einsum("ij,j->ij", np.ones_like(b_0), correction)
+
+    # Return a fresh MagneticField that carries the same metadata as the input.
+    return MagneticField(iron_field.metadata, values)
+
 def converge_synchronous_field(beam_parameters: BeamParameters, 
                                iron_field: MagneticField,
                                extraction_radius: float = _REFERENCE_RADIUS,
