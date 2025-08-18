@@ -6,4 +6,5 @@ Cyclotron Analysis Documentation
    :caption: API Reference
 
    model
-   fields
+   ops.cyclotron.analysis.model
+   ops.cyclotron.analysis.fields
