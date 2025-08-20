@@ -37,26 +37,21 @@ class SplineFieldInterpolator(FieldInterpolator):
                  cyclotron_length: float = 1.0,
                  magnetic_field_unit: float = 1.0) -> None:
         super().__init__(magnetic_field, cyclotron_length, magnetic_field_unit)
-        rs = np.array(magnetic_field.r_values)/cyclotron_length
-        self.full_rs = np.concatenate([np.flip(-rs[1:]), rs])
-        d_th = int(self.magnetic_field.metadata.delta_theta)
-        th = np.array(self.magnetic_field.theta_values)
-        full_th = np.concat([[v for v in range(0, th[0], d_th)], 
-                             th[:-1], 
-                             [v for v in range(th[-1], 360 + d_th, d_th)]])*np.pi/180
-        th_pad_i = int((th[0])/d_th)
-        th_pad_f = int((360 - th[-1])/d_th)
-        
-        self._b_int = RectBivariateSpline(
-            full_th, 
-            self.full_rs, 
-            np.pad(
-                np.pad(self.magnetic_field.values, 
-                       [(0, 0), (len(rs) - 1, 0)], 
-                       mode='reflect'), 
-                [(th_pad_i, th_pad_f), (0, 0)], 
-                mode='wrap')/magnetic_field_unit, 
-            kx=2, ky=2)
+
+        field_values = magnetic_field.values[:,1:]
+        n_r = field_values.shape[1]
+        r_max = magnetic_field.r_values[-1]/cyclotron_length
+        r_min = magnetic_field.r_values[1]/cyclotron_length
+
+        self.full_rs = np.linspace(r_min, r_max, n_r)
+        ths = self.magnetic_field.theta_values
+        th_min, th_max = ths[0], ths[-1]
+        dth = magnetic_field.metadata.delta_theta
+        full_th = np.linspace(0, 2*np.pi, int(360/dth))
+        th_pad = int((th_min)/dth), int((360 - th_max)/dth - 1) 
+        padded_values = np.pad(field_values, [th_pad, (0, 0)], mode='wrap')/magnetic_field_unit
+        print(full_th.shape, self.full_rs.shape, padded_values.shape) 
+        self._b_int = RectBivariateSpline( full_th, self.full_rs, padded_values, kx=2, ky=2)
                                         
         self._dbt_int = self._b_int.partial_derivative(1, 0)
         self._dbr_int = self._b_int.partial_derivative(0, 1)

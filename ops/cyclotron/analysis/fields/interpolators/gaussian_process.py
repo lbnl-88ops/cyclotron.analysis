@@ -10,7 +10,11 @@ from ops.cyclotron.analysis.model import MagneticField
 _log = getLogger(__name__)
 
 class GaussianProcessFieldInterpolator(FieldInterpolator):
-    def __init__(self, magnetic_field: MagneticField, l_0: float = 1.0, b_0: float = 1.0) -> None:
+    def __init__(self, magnetic_field: MagneticField, 
+                 l_0: float = 1.0, 
+                 b_0: float = 1.0,
+                 *,
+                 data_slicing: int = 5) -> None:
         super().__init__(magnetic_field, l_0, b_0)
         dth = magnetic_field.metadata.delta_theta
 
@@ -28,7 +32,7 @@ class GaussianProcessFieldInterpolator(FieldInterpolator):
                         length_scale_bounds=[(1E-8, 1E8), (1E-8, 1E8)], nu=1.5)
         self.gp = GaussianProcessRegressor(kernel=kernel, alpha=1E-5)
         _log.info('Fitting magnetic field Gaussian Process and computing derivatives.')
-        self.gp.fit(X, Y)
+        self.gp.fit(X[::data_slicing], Y[::data_slicing])
         self.derivative = nd.Gradient(self._gp_mean)
         _log.debug(f'Fit: {self.gp.kernel_}')
         _log.info('Fitting complete.')
